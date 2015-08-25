@@ -95,15 +95,20 @@ namespace CommandRecipes {
     void Craft(CommandArgs args) {
       Item item;
       var player = Utils.GetPlayer(args.Player.Index);
-      if (args.Parameters.Count == 0) {
-        args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /craft <recipe/-quit/-list/-allcats/-cat/-confirm>");
-        return;
-      }
-
-      var subcmd = args.Parameters[0].ToLower();
       int page = 1;
 
-      switch (subcmd) {
+      if (args.Parameters.Count == 0) {
+        if (player.activeRecipe != null) {
+          Utils.PrintCurrentRecipe(args.Player);
+          return;
+        }
+        else {
+          args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /craft <recipe/-quit/-list/-allcats/-cat/-confirm>");
+          return;
+        }
+      }
+
+      switch (args.Parameters[0].ToLowerInvariant()) {
         #region -list
         case "-list":
           if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out page))
@@ -113,7 +118,7 @@ namespace CommandRecipes {
 
           PaginationTools.SendPage(args.Player, page, PaginationTools.BuildLinesFromTerms(allRec),
             new PaginationTools.Settings {
-              HeaderFormat = "Recipes ({0}/{1}):",
+              HeaderFormat = "All Recipes ({0}/{1}):",
               FooterFormat = "Type /craft -list {0} for more.",
               NothingToDisplayString = "There are currently no recipes defined!"
             });
@@ -151,7 +156,7 @@ namespace CommandRecipes {
           List<string> catrec = config.Recipes
             .Where(r => !r.invisible && r.categories.Contains(cat, StringComparer.InvariantCultureIgnoreCase))
             .Select(x => x.name).ToList();
-          
+
           PaginationTools.SendPage(args.Player, page, PaginationTools.BuildLinesFromTerms(catrec),
             new PaginationTools.Settings {
               HeaderFormat = "Recipes in this category ({0}/{1}):",
@@ -213,7 +218,7 @@ namespace CommandRecipes {
               }
             }
           }
-          
+
           if (ingcount < ingredientCount) {
             args.Player.SendErrorMessage("Insufficient ingredients!");
             return;
@@ -262,10 +267,16 @@ namespace CommandRecipes {
 
         #region default
         default:
+          if (!args.Player.IsLoggedIn) {
+            args.Player.SendErrorMessage("You must be logged in to use this command!");
+            return;
+          }
+
           if (player.activeRecipe != null) {
             args.Player.SendErrorMessage("You must finish crafting or quit your current recipe!");
             return;
           }
+
           string recipe = string.Join(" ", args.Parameters);
           Recipe rec = config.Recipes.Where(r => r.name.ToLower() == recipe.ToLower()).FirstOrDefault();
           if (rec == null) {
@@ -286,9 +297,7 @@ namespace CommandRecipes {
           if (player.activeRecipe == null)
             return;
 
-          List<string> inglist = Utils.ListIngredients(player.activeRecipe.ingredients);
-          args.Player.SendInfoMessage("The {0} recipe requires:", player.activeRecipe.name);
-          args.Player.SendMessage(string.Format("Ingredients: {0}", String.Join(", ", inglist.ToArray(), 0, inglist.Count)), Color.LightGray);
+          Utils.PrintCurrentRecipe(args.Player);
           return;
           #endregion
       }

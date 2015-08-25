@@ -92,6 +92,18 @@ namespace CommandRecipes {
       return false;
     }
 
+    public static void PrintCurrentRecipe(TSPlayer tsplr) {
+      var player = Utils.GetPlayer(tsplr.Index);
+
+      if (player.activeRecipe == null)
+        return;
+
+      List<string> inglist = Utils.ListIngredients(player.activeRecipe.ingredients);
+      tsplr.SendInfoMessage("The {0} recipe requires: ", player.activeRecipe.name);
+      tsplr.SendMessage(string.Format("Ingredients: {0}", String.Join(", ", inglist.ToArray(), 0, inglist.Count)), Color.LightGray);
+      tsplr.SendInfoMessage("Type \"/craft -confirm\" to craft., or \"/craft -quit\" to quit");
+    }
+
     // I stole this code from my AutoRank plugin - with a few changes. It worked, so.
     public static string ParseCommand(TSPlayer player, string text) {
       if (player == null || string.IsNullOrEmpty(text))
