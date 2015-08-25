@@ -198,36 +198,8 @@ namespace CommandRecipes {
   }
 
   public class RecConfig {
-    public List<Recipe> Recipes;
-
-    public RecConfig() {
-      Recipes = new List<Recipe>();
-      Recipes.Add(new Recipe("Copper Broadsword",
-        new List<Ingredient>() {
-            new Ingredient("Copper Bar", 8, 0, 1),
-            new Ingredient("Iron Bar", 8, 0, 1),
-            new Ingredient("Stone Block", 20, 0, 0),
-            new Ingredient("Wooden Hammer", 1, 0, 0) },
-        new List<Product>() {
-            new Product("Copper Broadsword", 1, 41, 1, 50),
-            new Product("Copper Shortsword", 1, 41, 1, 50),
-            new Product("Wooden Hammer", 1, 39, 0, 100) },
-        new List<string> { "Example" },
-        new List<string> { "" },
-        new List<string> { "" }));
-      Recipes.Add(new Recipe("Iron Broadsword",
-        new List<Ingredient>() {
-            new Ingredient("Iron Bar", 8, 0, 0),
-            new Ingredient("Stone Block", 20, 0, 0),
-            new Ingredient("Wooden Hammer", 1, -1, 0) },
-        new List<Product>() {
-            new Product("Iron Broadsword", 1, 41, 0, 100),
-            new Product("Wooden Hammer", 1, 39, 0, 100) },
-        new List<string> { "Example", "Example2" },
-        new List<string> { "cmdrec.craft.example" },
-        new List<string> { "" }));
-    }
-
+    public List<Recipe> Recipes = new List<Recipe>();
+    
     public static RecConfig Read() {
       if (!File.Exists(CommandRecipes.configPath)) {
         return Write();
@@ -245,6 +217,30 @@ namespace CommandRecipes {
 
     public static RecConfig Write() {
       RecConfig res = new RecConfig();
+      res.Recipes.Add(new Recipe("Copper Broadsword",
+        new List<Ingredient>() {
+            new Ingredient("Copper Bar", 8, 0, 1),
+            new Ingredient("Iron Bar", 8, 0, 1),
+            new Ingredient("Stone Block", 20, 0, 0),
+            new Ingredient("Wooden Hammer", 1, 0, 0) },
+        new List<Product>() {
+            new Product("Copper Broadsword", 1, 41, 1, 50),
+            new Product("Copper Shortsword", 1, 41, 1, 50),
+            new Product("Wooden Hammer", 1, 39, 0, 100) },
+        new List<string> { "Example" },
+        new List<string> { "" },
+        new List<string> { "" }));
+      res.Recipes.Add(new Recipe("Iron Broadsword",
+        new List<Ingredient>() {
+            new Ingredient("Iron Bar", 8, 0, 0),
+            new Ingredient("Stone Block", 20, 0, 0),
+            new Ingredient("Wooden Hammer", 1, -1, 0) },
+        new List<Product>() {
+            new Product("Iron Broadsword", 1, 41, 0, 100),
+            new Product("Wooden Hammer", 1, 39, 0, 100) },
+        new List<string> { "Example", "Example2" },
+        new List<string> { "cmdrec.craft.example" },
+        new List<string> { "" }));
       File.WriteAllText(CommandRecipes.configPath, JsonConvert.SerializeObject(res, Formatting.Indented));
       return res;
     }

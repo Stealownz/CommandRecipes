@@ -143,14 +143,6 @@ namespace CommandRecipes {
           Directory.CreateDirectory(CommandRecipes.configDir);
 
         CommandRecipes.config = RecConfig.Read();
-
-        foreach (Recipe rec in CommandRecipes.config.Recipes) {
-          if (!CommandRecipes.recs.Contains(rec.name.ToLower()))
-            CommandRecipes.recs.Add(rec.name.ToLower());
-          rec.categories.ForEach((item) => {
-            CommandRecipes.cats.Add(item.ToLower());
-          });
-        }
       }
       catch (Exception ex) {
         TShock.Log.ConsoleError("Error in recConfig.json!");
@@ -173,7 +165,7 @@ namespace CommandRecipes {
       if (prefix != "") {
         prefix += " ";
       }
-      return String.Format("{0} {1}{2}(s)",
+      return String.Format("{0} {1}{2}",
         (stacks == 0) ? Math.Abs(item.stack) : stacks,
         prefix,
         item.name);
@@ -181,7 +173,7 @@ namespace CommandRecipes {
     public static string LogFormatItem(Item item, int stacks = 0) {
       string str = GetPrefixById(item.prefix);
       string prefix = str == "" ? "" : "[" + str + "] ";
-      return String.Format("{0} {1}{2}(s)",
+      return String.Format("{0} {1}{2}",
         (stacks == 0) ? Math.Abs(item.stack) : stacks,
         prefix,
         item.name);

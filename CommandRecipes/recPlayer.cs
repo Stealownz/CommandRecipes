@@ -9,7 +9,6 @@ namespace CommandRecipes {
   public class RecPlayer {
     public int Index;
     public Recipe activeRecipe;
-    public List<Ingredient> activeIngredients;
     public List<RecItem> droppedItems = new List<RecItem>();
 
     public string name { get { return Main.player[Index].name; } }
