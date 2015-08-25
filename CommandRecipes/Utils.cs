@@ -8,315 +8,275 @@ using Terraria;
 using TShockAPI;
 using TShockAPI.DB;
 
-namespace CommandRecipes
-{
-	public class Utils
-	{
-		public static List<RecPlayer> GetPlayerList(string name)
-		{
-			foreach (RecPlayer player in CmdRec.RPlayers)
-			{
-				if (player.name.ToLower().Contains(name.ToLower()))
-				{
-					return new List<RecPlayer>() { player };
-				}
-			}
-			return new List<RecPlayer>();
-		}
+namespace CommandRecipes {
+  public class Utils {
+    public static List<RecPlayer> GetPlayerList(string name) {
+      foreach (RecPlayer player in CommandRecipes.RPlayers) {
+        if (player.name.ToLower().Contains(name.ToLower())) {
+          return new List<RecPlayer>() { player };
+        }
+      }
+      return new List<RecPlayer>();
+    }
 
-		public static RecPlayer GetPlayer(int index)
-		{
-			foreach (RecPlayer player in CmdRec.RPlayers)
-				if (player.Index == index)
-					return player;
+    public static RecPlayer GetPlayer(int index) {
+      foreach (RecPlayer player in CommandRecipes.RPlayers)
+        if (player.Index == index)
+          return player;
 
-			return null;
-		}
+      return null;
+    }
 
-		public static List<string> ListIngredients(List<Ingredient> actIngs)
-		{
-			List<string> lActIngs = new List<string>();
-			List<int> groups = new List<int>();
-			foreach (Ingredient item in actIngs)
-				if (item.group == 0)
-					lActIngs.Add(FormatItem((Item)item));
-				else if(!groups.Contains(item.group))
-					groups.Add(item.group);
+    public static List<string> ListIngredients(List<Ingredient> actIngs) {
+      List<string> lActIngs = new List<string>();
+      List<int> groups = new List<int>();
+      foreach (Ingredient item in actIngs)
+        if (item.group == 0)
+          lActIngs.Add(FormatItem((Item)item));
+        else if (!groups.Contains(item.group))
+          groups.Add(item.group);
 
-			for (int i = 0; i < groups.Count; i++)
-			{
-				List<string> lGrIng = new List<string>();
-				foreach (Ingredient item in actIngs)
-				{
-					if (groups[i] == item.group)
-						lGrIng.Add(FormatItem((Item)item));
-				}
-				lActIngs.Add(String.Join(" or ", lGrIng));
-			}
-			return lActIngs;
-		}
+      for (int i = 0; i < groups.Count; i++) {
+        List<string> lGrIng = new List<string>();
+        foreach (Ingredient item in actIngs) {
+          if (groups[i] == item.group)
+            lGrIng.Add(FormatItem((Item)item));
+        }
+        lActIngs.Add(String.Join(" or ", lGrIng));
+      }
+      return lActIngs;
+    }
 
-		public static List<Product> DetermineProducts(List<Product> actPros)
-		{
-			List<Product> lActPros = new List<Product>();
-			List<int> groups = new List<int>();
-			foreach (Product pro in actPros)
-			{
-				if (pro.group == 0)
-					lActPros.Add(pro);
-				else if (!groups.Contains(pro.group))
-					groups.Add(pro.group);
-			}
+    public static List<Product> DetermineProducts(List<Product> actPros) {
+      List<Product> lActPros = new List<Product>();
+      List<int> groups = new List<int>();
+      foreach (Product pro in actPros) {
+        if (pro.group == 0)
+          lActPros.Add(pro);
+        else if (!groups.Contains(pro.group))
+          groups.Add(pro.group);
+      }
 
-			for (int i = 0; i < groups.Count; i++)
-			{
-				List<Product> proPool = new List<Product>();
-				foreach (Product pro in actPros)
-				{
-					if (groups[i] == pro.group)
-						proPool.Add(pro);
-				}
+      for (int i = 0; i < groups.Count; i++) {
+        List<Product> proPool = new List<Product>();
+        foreach (Product pro in actPros) {
+          if (groups[i] == pro.group)
+            proPool.Add(pro);
+        }
 
-				Random r = new Random();
-				double diceRoll = r.Next(100);
+        Random r = new Random();
+        double diceRoll = r.Next(100);
 
-				int cumulative = 0;
-				for (int j = 0; j < proPool.Count; j++)
-				{
-					cumulative += (proPool[j].weight);
-				    if (diceRoll < cumulative)
-				    {
-						lActPros.Add(proPool[j]);
-				        break;
-				    }
-				}
-			}
-			return lActPros;
-		}
+        int cumulative = 0;
+        for (int j = 0; j < proPool.Count; j++) {
+          cumulative += (proPool[j].weight);
+          if (diceRoll < cumulative) {
+            lActPros.Add(proPool[j]);
+            break;
+          }
+        }
+      }
+      return lActPros;
+    }
 
-		public static bool CheckIfInRegion(TSPlayer plr, List<string> region)
-		{
-			if (region.Contains(""))
-				return true;
+    public static bool CheckIfInRegion(TSPlayer plr, List<string> region) {
+      if (region.Contains(""))
+        return true;
 
-			Region r;
-			foreach (var reg in region)
-			{
-				r = TShock.Regions.GetRegionByName(reg);
-				if (r != null && r.InArea((int)plr.X, (int)plr.Y))
-					return true;
-			}
-			return false;
-		}
+      Region r;
+      foreach (var reg in region) {
+        r = TShock.Regions.GetRegionByName(reg);
+        if (r != null && r.InArea((int)plr.X, (int)plr.Y))
+          return true;
+      }
+      return false;
+    }
 
-		// I stole this code from my AutoRank plugin - with a few changes. It worked, so.
-		public static string ParseCommand(TSPlayer player, string text)
-		{
-			if (player == null || string.IsNullOrEmpty(text))
-				return "";
+    // I stole this code from my AutoRank plugin - with a few changes. It worked, so.
+    public static string ParseCommand(TSPlayer player, string text) {
+      if (player == null || string.IsNullOrEmpty(text))
+        return "";
 
-			var replacements = new Dictionary<string, object>();
+      var replacements = new Dictionary<string, object>();
 
-			replacements.Add("$group", player.Group.Name);
-			replacements.Add("$ip", player.IP);
-			replacements.Add("$playername", player.Name);
-			replacements.Add("$username", player.User.Name);
+      replacements.Add("$group", player.Group.Name);
+      replacements.Add("$ip", player.IP);
+      replacements.Add("$playername", player.Name);
+      replacements.Add("$username", player.User.Name);
 
-			foreach (var word in replacements)
-			{
-				// Quotes are automatically added - no more self-imposed quotes with $playername!
-				text = text.Replace(word.Key, "\"{0}\"".SFormat(word.Value.ToString()));
-			}
+      foreach (var word in replacements) {
+        // Quotes are automatically added - no more self-imposed quotes with $playername!
+        text = text.Replace(word.Key, "\"{0}\"".SFormat(word.Value.ToString()));
+      }
 
-			return text;
-		}
+      return text;
+    }
 
-		// ^ Such ditto, many IVs.
-		public static List<string> ParseParameters(string text)
-		{
-			text = text.Trim();
-			var args = new List<string>();
-			StringBuilder sb = new StringBuilder();
-			bool quote = false;
-			for (int i = 0; i < text.Length; i++)
-			{
-				char c = text[i];
+    // ^ Such ditto, many IVs.
+    public static List<string> ParseParameters(string text) {
+      text = text.Trim();
+      var args = new List<string>();
+      StringBuilder sb = new StringBuilder();
+      bool quote = false;
+      for (int i = 0; i < text.Length; i++) {
+        char c = text[i];
 
-				if (char.IsWhiteSpace(c) && !quote)
-				{
-					args.Add(sb.ToString());
-					sb.Clear();
-				}
-				else if (c == '"')
-				{
-					quote = !quote;
-				}
-				else
-				{
-					sb.Append(c);
-				}
-			}
-			args.Add(sb.ToString());
-			return args;
-		}
+        if (char.IsWhiteSpace(c) && !quote) {
+          args.Add(sb.ToString());
+          sb.Clear();
+        }
+        else if (c == '"') {
+          quote = !quote;
+        }
+        else {
+          sb.Append(c);
+        }
+      }
+      args.Add(sb.ToString());
+      return args;
+    }
 
-		#region SetUpConfig
-		public static void SetUpConfig()
-		{
-			try
-			{
-				if (!Directory.Exists(CmdRec.configDir))
-					Directory.CreateDirectory(CmdRec.configDir);
+    #region SetUpConfig
+    public static void SetUpConfig() {
+      try {
+        if (!Directory.Exists(CommandRecipes.configDir))
+          Directory.CreateDirectory(CommandRecipes.configDir);
 
-				if (File.Exists(CmdRec.configPath))
-					CmdRec.config = RecConfig.Read(CmdRec.configPath);
-				else
-					CmdRec.config.Write(CmdRec.configPath);
+        CommandRecipes.config = RecConfig.Read();
 
-				foreach (Recipe rec in CmdRec.config.Recipes)
-				{
-					if (!CmdRec.recs.Contains(rec.name.ToLower()))
-						CmdRec.recs.Add(rec.name.ToLower());
-					rec.categories.ForEach((item) =>
-					{
-						CmdRec.cats.Add(item.ToLower());
-					});
-				}
-			}
-			catch (Exception ex)
-			{
-				// Why were you using this instead of Log.ConsoleError?
-				//Console.ForegroundColor = ConsoleColor.Red;
-				//Console.WriteLine("Error in recConfig.json!");
-				//Console.ResetColor();
-				TShock.Log.ConsoleError("Error in recConfig.json!");
-				TShock.Log.ConsoleError(ex.ToString());
-			}
-		}
-		#endregion
+        foreach (Recipe rec in CommandRecipes.config.Recipes) {
+          if (!CommandRecipes.recs.Contains(rec.name.ToLower()))
+            CommandRecipes.recs.Add(rec.name.ToLower());
+          rec.categories.ForEach((item) => {
+            CommandRecipes.cats.Add(item.ToLower());
+          });
+        }
+      }
+      catch (Exception ex) {
+        TShock.Log.ConsoleError("Error in recConfig.json!");
+        TShock.Log.ConsoleError(ex.ToString());
+      }
+    }
+    #endregion
 
-		#region GetPrefixById
-		// Required until everyone gets their TShock updated
-		public static string GetPrefixById(int id)
-		{
-			return id < 1 || id > 83 ? "" : Lang.prefix[id] ?? "";
-		}
-		#endregion
+    #region GetPrefixById
+    // Required until everyone gets their TShock updated
+    public static string GetPrefixById(int id) {
+      return id < 1 || id > 83 ? "" : Lang.prefix[id] ?? "";
+    }
+    #endregion
 
-		#region FormatItem
-		// Though it would be an interesting addition
-		public static string FormatItem(Item item, int stacks = 0)
-		{
-			string prefix = GetPrefixById(item.prefix);
-			if (prefix != "")
-			{
-				prefix += " ";
-			}
-			return String.Format("{0} {1}{2}(s)",
-				(stacks == 0) ? Math.Abs(item.stack) : stacks,
-				prefix,
-				item.name);
-		}
-		public static string LogFormatItem(Item item, int stacks = 0)
-		{
-			string str = GetPrefixById(item.prefix);
-			string prefix = str == "" ? "" : "[" + str + "] ";
-			return String.Format("{0} {1}{2}(s)",
-				(stacks == 0) ? Math.Abs(item.stack) : stacks,
-				prefix,
-				item.name);
-		}
-		#endregion
+    #region FormatItem
+    // Though it would be an interesting addition
+    public static string FormatItem(Item item, int stacks = 0) {
+      string prefix = GetPrefixById(item.prefix);
+      if (prefix != "") {
+        prefix += " ";
+      }
+      return String.Format("{0} {1}{2}(s)",
+        (stacks == 0) ? Math.Abs(item.stack) : stacks,
+        prefix,
+        item.name);
+    }
+    public static string LogFormatItem(Item item, int stacks = 0) {
+      string str = GetPrefixById(item.prefix);
+      string prefix = str == "" ? "" : "[" + str + "] ";
+      return String.Format("{0} {1}{2}(s)",
+        (stacks == 0) ? Math.Abs(item.stack) : stacks,
+        prefix,
+        item.name);
+    }
+    #endregion
 
-		#region AddToPrefixes(old)
-		//public static void AddToPrefixes()
-		//{
-		//	#region Prefixes
-		//	CmdRec.prefixes.Add(1, "Large");
-		//	CmdRec.prefixes.Add(2, "Massive");
-		//	CmdRec.prefixes.Add(3, "Dangerous");
-		//	CmdRec.prefixes.Add(4, "Savage");
-		//	CmdRec.prefixes.Add(5, "Sharp");
-		//	CmdRec.prefixes.Add(6, "Pointy");
-		//	CmdRec.prefixes.Add(7, "Tiny");
-		//	CmdRec.prefixes.Add(8, "Terrible");
-		//	CmdRec.prefixes.Add(9, "Small");
-		//	CmdRec.prefixes.Add(10, "Dull");
-		//	CmdRec.prefixes.Add(11, "Unhappy");
-		//	CmdRec.prefixes.Add(12, "Bulky");
-		//	CmdRec.prefixes.Add(13, "Shameful");
-		//	CmdRec.prefixes.Add(14, "Heavy");
-		//	CmdRec.prefixes.Add(15, "Light");
-		//	CmdRec.prefixes.Add(16, "Sighted");
-		//	CmdRec.prefixes.Add(17, "Rapid");
-		//	CmdRec.prefixes.Add(18, "Hasty");
-		//	CmdRec.prefixes.Add(19, "Intimidating");
-		//	CmdRec.prefixes.Add(20, "Deadly");
-		//	CmdRec.prefixes.Add(21, "Staunch");
-		//	CmdRec.prefixes.Add(22, "Awful");
-		//	CmdRec.prefixes.Add(23, "Lethargic");
-		//	CmdRec.prefixes.Add(24, "Awkward");
-		//	CmdRec.prefixes.Add(25, "Powerful");
-		//	CmdRec.prefixes.Add(26, "Mystic");
-		//	CmdRec.prefixes.Add(27, "Adept");
-		//	CmdRec.prefixes.Add(28, "Masterful");
-		//	CmdRec.prefixes.Add(29, "Inept");
-		//	CmdRec.prefixes.Add(30, "Ignorant");
-		//	CmdRec.prefixes.Add(31, "Deranged");
-		//	CmdRec.prefixes.Add(32, "Intense");
-		//	CmdRec.prefixes.Add(33, "Taboo");
-		//	CmdRec.prefixes.Add(34, "Celestial");
-		//	CmdRec.prefixes.Add(35, "Furious");
-		//	CmdRec.prefixes.Add(36, "Keen");
-		//	CmdRec.prefixes.Add(37, "Superior");
-		//	CmdRec.prefixes.Add(38, "Forceful");
-		//	CmdRec.prefixes.Add(39, "Broken");
-		//	CmdRec.prefixes.Add(40, "Damaged");
-		//	CmdRec.prefixes.Add(41, "Shoddy");
-		//	CmdRec.prefixes.Add(42, "Quick");
-		//	CmdRec.prefixes.Add(43, "Deadly");
-		//	CmdRec.prefixes.Add(44, "Agile");
-		//	CmdRec.prefixes.Add(45, "Nimble");
-		//	CmdRec.prefixes.Add(46, "Murderous");
-		//	CmdRec.prefixes.Add(47, "Slow");
-		//	CmdRec.prefixes.Add(48, "Sluggish");
-		//	CmdRec.prefixes.Add(49, "Lazy");
-		//	CmdRec.prefixes.Add(50, "Annoying");
-		//	CmdRec.prefixes.Add(51, "Nasty");
-		//	CmdRec.prefixes.Add(52, "Manic");
-		//	CmdRec.prefixes.Add(53, "Hurtful");
-		//	CmdRec.prefixes.Add(54, "Strong");
-		//	CmdRec.prefixes.Add(55, "Unpleasant");
-		//	CmdRec.prefixes.Add(56, "Weak");
-		//	CmdRec.prefixes.Add(57, "Ruthless");
-		//	CmdRec.prefixes.Add(58, "Frenzying");
-		//	CmdRec.prefixes.Add(59, "Godly");
-		//	CmdRec.prefixes.Add(60, "Demonic");
-		//	CmdRec.prefixes.Add(61, "Zealous");
-		//	CmdRec.prefixes.Add(62, "Hard");
-		//	CmdRec.prefixes.Add(63, "Guarding");
-		//	CmdRec.prefixes.Add(64, "Armored");
-		//	CmdRec.prefixes.Add(65, "Warding");
-		//	CmdRec.prefixes.Add(66, "Arcane");
-		//	CmdRec.prefixes.Add(67, "Precise");
-		//	CmdRec.prefixes.Add(68, "Lucky");
-		//	CmdRec.prefixes.Add(69, "Jagged");
-		//	CmdRec.prefixes.Add(70, "Spiked");
-		//	CmdRec.prefixes.Add(71, "Angry");
-		//	CmdRec.prefixes.Add(72, "Menacing");
-		//	CmdRec.prefixes.Add(73, "Brisk");
-		//	CmdRec.prefixes.Add(74, "Fleeting");
-		//	CmdRec.prefixes.Add(75, "Hasty");
-		//	CmdRec.prefixes.Add(76, "Quick");
-		//	CmdRec.prefixes.Add(77, "Wild");
-		//	CmdRec.prefixes.Add(78, "Rash");
-		//	CmdRec.prefixes.Add(79, "Intrepid");
-		//	CmdRec.prefixes.Add(80, "Violent");
-		//	CmdRec.prefixes.Add(81, "Legendary");
-		//	CmdRec.prefixes.Add(82, "Unreal");
-		//	CmdRec.prefixes.Add(83, "Mythical");
-		//	#endregion
-		//}
-		#endregion
-	}
+    #region AddToPrefixes(old)
+    //public static void AddToPrefixes()
+    //{
+    //	#region Prefixes
+    //	CommandRecipes.prefixes.Add(1, "Large");
+    //	CommandRecipes.prefixes.Add(2, "Massive");
+    //	CommandRecipes.prefixes.Add(3, "Dangerous");
+    //	CommandRecipes.prefixes.Add(4, "Savage");
+    //	CommandRecipes.prefixes.Add(5, "Sharp");
+    //	CommandRecipes.prefixes.Add(6, "Pointy");
+    //	CommandRecipes.prefixes.Add(7, "Tiny");
+    //	CommandRecipes.prefixes.Add(8, "Terrible");
+    //	CommandRecipes.prefixes.Add(9, "Small");
+    //	CommandRecipes.prefixes.Add(10, "Dull");
+    //	CommandRecipes.prefixes.Add(11, "Unhappy");
+    //	CommandRecipes.prefixes.Add(12, "Bulky");
+    //	CommandRecipes.prefixes.Add(13, "Shameful");
+    //	CommandRecipes.prefixes.Add(14, "Heavy");
+    //	CommandRecipes.prefixes.Add(15, "Light");
+    //	CommandRecipes.prefixes.Add(16, "Sighted");
+    //	CommandRecipes.prefixes.Add(17, "Rapid");
+    //	CommandRecipes.prefixes.Add(18, "Hasty");
+    //	CommandRecipes.prefixes.Add(19, "Intimidating");
+    //	CommandRecipes.prefixes.Add(20, "Deadly");
+    //	CommandRecipes.prefixes.Add(21, "Staunch");
+    //	CommandRecipes.prefixes.Add(22, "Awful");
+    //	CommandRecipes.prefixes.Add(23, "Lethargic");
+    //	CommandRecipes.prefixes.Add(24, "Awkward");
+    //	CommandRecipes.prefixes.Add(25, "Powerful");
+    //	CommandRecipes.prefixes.Add(26, "Mystic");
+    //	CommandRecipes.prefixes.Add(27, "Adept");
+    //	CommandRecipes.prefixes.Add(28, "Masterful");
+    //	CommandRecipes.prefixes.Add(29, "Inept");
+    //	CommandRecipes.prefixes.Add(30, "Ignorant");
+    //	CommandRecipes.prefixes.Add(31, "Deranged");
+    //	CommandRecipes.prefixes.Add(32, "Intense");
+    //	CommandRecipes.prefixes.Add(33, "Taboo");
+    //	CommandRecipes.prefixes.Add(34, "Celestial");
+    //	CommandRecipes.prefixes.Add(35, "Furious");
+    //	CommandRecipes.prefixes.Add(36, "Keen");
+    //	CommandRecipes.prefixes.Add(37, "Superior");
+    //	CommandRecipes.prefixes.Add(38, "Forceful");
+    //	CommandRecipes.prefixes.Add(39, "Broken");
+    //	CommandRecipes.prefixes.Add(40, "Damaged");
+    //	CommandRecipes.prefixes.Add(41, "Shoddy");
+    //	CommandRecipes.prefixes.Add(42, "Quick");
+    //	CommandRecipes.prefixes.Add(43, "Deadly");
+    //	CommandRecipes.prefixes.Add(44, "Agile");
+    //	CommandRecipes.prefixes.Add(45, "Nimble");
+    //	CommandRecipes.prefixes.Add(46, "Murderous");
+    //	CommandRecipes.prefixes.Add(47, "Slow");
+    //	CommandRecipes.prefixes.Add(48, "Sluggish");
+    //	CommandRecipes.prefixes.Add(49, "Lazy");
+    //	CommandRecipes.prefixes.Add(50, "Annoying");
+    //	CommandRecipes.prefixes.Add(51, "Nasty");
+    //	CommandRecipes.prefixes.Add(52, "Manic");
+    //	CommandRecipes.prefixes.Add(53, "Hurtful");
+    //	CommandRecipes.prefixes.Add(54, "Strong");
+    //	CommandRecipes.prefixes.Add(55, "Unpleasant");
+    //	CommandRecipes.prefixes.Add(56, "Weak");
+    //	CommandRecipes.prefixes.Add(57, "Ruthless");
+    //	CommandRecipes.prefixes.Add(58, "Frenzying");
+    //	CommandRecipes.prefixes.Add(59, "Godly");
+    //	CommandRecipes.prefixes.Add(60, "Demonic");
+    //	CommandRecipes.prefixes.Add(61, "Zealous");
+    //	CommandRecipes.prefixes.Add(62, "Hard");
+    //	CommandRecipes.prefixes.Add(63, "Guarding");
+    //	CommandRecipes.prefixes.Add(64, "Armored");
+    //	CommandRecipes.prefixes.Add(65, "Warding");
+    //	CommandRecipes.prefixes.Add(66, "Arcane");
+    //	CommandRecipes.prefixes.Add(67, "Precise");
+    //	CommandRecipes.prefixes.Add(68, "Lucky");
+    //	CommandRecipes.prefixes.Add(69, "Jagged");
+    //	CommandRecipes.prefixes.Add(70, "Spiked");
+    //	CommandRecipes.prefixes.Add(71, "Angry");
+    //	CommandRecipes.prefixes.Add(72, "Menacing");
+    //	CommandRecipes.prefixes.Add(73, "Brisk");
+    //	CommandRecipes.prefixes.Add(74, "Fleeting");
+    //	CommandRecipes.prefixes.Add(75, "Hasty");
+    //	CommandRecipes.prefixes.Add(76, "Quick");
+    //	CommandRecipes.prefixes.Add(77, "Wild");
+    //	CommandRecipes.prefixes.Add(78, "Rash");
+    //	CommandRecipes.prefixes.Add(79, "Intrepid");
+    //	CommandRecipes.prefixes.Add(80, "Violent");
+    //	CommandRecipes.prefixes.Add(81, "Legendary");
+    //	CommandRecipes.prefixes.Add(82, "Unreal");
+    //	CommandRecipes.prefixes.Add(83, "Mythical");
+    //	#endregion
+    //}
+    #endregion
+  }
 }
