@@ -109,18 +109,6 @@ namespace CommandRecipes {
     }
   }
 
-  public class LogRecipe {
-    public string name;
-    public List<RecItem> ingredients;
-    public List<RecItem> products;
-
-    public LogRecipe(string name, List<RecItem> ingredients, List<RecItem> products) {
-      this.name = name;
-      this.ingredients = ingredients;
-      this.products = products;
-    }
-  }
-
   public abstract class RecipeFactory {
     public abstract Recipe Clone();
   }

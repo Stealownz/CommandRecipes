@@ -20,7 +20,7 @@ namespace CommandRecipes {
     public static RecConfig config { get; set; }
     public static string configDir { get { return Path.Combine(TShock.SavePath, "CommandRecipes"); } }
     public static string configPath { get { return Path.Combine(configDir, "AllRecipes.json"); } }
-    public RecipeLog Log { get; set; }
+    public static RecipeLog Log { get; set; }
 
     #region Info
     public override string Name {
@@ -237,11 +237,11 @@ namespace CommandRecipes {
 
               item.stack -= stack;
               ing.stack -= stack;
-              NetMessage.SendData((int)PacketTypes.PlayerSlot, -1, -1, "", args.Player.Index, slot.Key);
               if (!player.droppedItems.ContainsItem(item.name, item.prefix))
                 player.droppedItems.Add(new RecItem(item.name, stack, item.prefix));
               else
                 player.droppedItems.GetItem(item.name, item.prefix).stack += slot.Value;
+              NetMessage.SendData((int)PacketTypes.PlayerSlot, -1, -1, "", args.Player.Index, slot.Key);
             }
           }
           List<Product> lDetPros = Utils.DetermineProducts(player.activeRecipe.products);
@@ -255,7 +255,7 @@ namespace CommandRecipes {
           }
           List<RecItem> prods = new List<RecItem>();
           lDetPros.ForEach(i => prods.Add(new RecItem(i.name, i.stack, i.prefix)));
-          Log.Recipe(new LogRecipe(player.activeRecipe.name, player.droppedItems, prods), player.name);
+          Log.Recipe(player.activeRecipe.name, player.droppedItems, prods, player.name);
           player.activeRecipe = null;
           player.droppedItems.Clear();
           player.TSPlayer.SendInfoMessage("Finished crafting.");
