@@ -8,6 +8,8 @@ using Terraria;
 using TShockAPI;
 using TShockAPI.DB;
 
+using Wolfje.Plugins.SEconomy;
+
 namespace CommandRecipes {
   public static class Utils {
     public static List<string> ListIngredients(List<Ingredient> actIngs) {
@@ -84,6 +86,10 @@ namespace CommandRecipes {
       List<string> inglist = Utils.ListIngredients(player.activeRecipe.ingredients);
       tsplr.SendInfoMessage("The {0} recipe requires: ", player.activeRecipe.name);
       tsplr.SendMessage(string.Format("Ingredients: {0}", String.Join(", ", inglist.ToArray(), 0, inglist.Count)), Color.LightGray);
+      if (SEconomyPlugin.Instance != null) {
+        string money = SEconomyPlugin.Instance.Configuration.MoneyConfiguration.MoneyName;
+        tsplr.SendMessage(string.Format("Cost: {0} {1}", player.activeRecipe.SEconomyCost, money), Color.LightGray);
+      }
       tsplr.SendInfoMessage("Type \"/craft -confirm\" to craft, or \"/craft -quit\" to quit");
     }
 

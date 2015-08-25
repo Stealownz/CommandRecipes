@@ -13,6 +13,9 @@ using TShockAPI;
 using TShockAPI.Hooks;
 using TShockAPI.DB;
 
+using Wolfje.Plugins.SEconomy;
+using Wolfje.Plugins.SEconomy.Journal;
+
 namespace CommandRecipes {
   [ApiVersion(1, 21)]
   public class CommandRecipes : TerrariaPlugin {
@@ -225,6 +228,18 @@ namespace CommandRecipes {
             args.Player.SendErrorMessage("Insufficient inventory space!");
             return;
           }
+
+          if (player.activeRecipe.SEconomyCost != 0 && SEconomyPlugin.Instance != null) {
+            IBankAccount bankAccount = SEconomyPlugin.Instance.GetPlayerBankAccount(args.Player.Name);
+            SEconomy seconomy = SEconomyPlugin.Instance;
+            if (bankAccount.Balance < player.activeRecipe.SEconomyCost) {
+              args.Player.SendErrorMessage("You don't have the necessary amount of {0} {1} to craft this recipe.", player.activeRecipe.SEconomyCost, seconomy.Configuration.MoneyConfiguration.MoneyNamePlural);
+              return;
+            }
+
+            bankAccount.TransferTo(seconomy.WorldAccount, player.activeRecipe.SEconomyCost, BankAccountTransferOptions.AnnounceToSender, "Crafted " + player.activeRecipe.name, "/craft " + player.activeRecipe.name);
+          }
+
           foreach (var slot in slots) {
             item = args.TPlayer.inventory[slot.Key];
             var ing = player.activeRecipe.ingredients.GetIngredient(item.name, item.prefix);
