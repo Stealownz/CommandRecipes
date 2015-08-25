@@ -16,7 +16,7 @@ using TShockAPI.DB;
 namespace CommandRecipes {
   [ApiVersion(1, 21)]
   public class CommandRecipes : TerrariaPlugin {
-    public static List<RecPlayer> RPlayers = new List<RecPlayer>();
+    public static RecPlayer[] RPlayers = new RecPlayer[Main.maxPlayers];
     public static RecConfig config { get; set; }
     public static string configDir { get { return Path.Combine(TShock.SavePath, "CommandRecipes"); } }
     public static string configPath { get { return Path.Combine(configDir, "AllRecipes.json"); } }
@@ -80,21 +80,18 @@ namespace CommandRecipes {
     }
 
     void OnPostLogin(PlayerPostLoginEventArgs args) {
-      RPlayers.Add(new RecPlayer(args.Player.Index));
-      var RecPlayer = RPlayers.AddToList(new RecPlayer(args.Player.Index));
+      RPlayers[args.Player.Index] = new RecPlayer(args.Player.Index);
     }
 
     void OnLeave(LeaveEventArgs args) {
-      var player = Utils.GetPlayer(args.Who);
-
-      RPlayers.RemoveAll(pl => pl.Index == args.Who);
+      RPlayers[args.Who] = null;
     }
     #endregion
 
     #region Commands
     void Craft(CommandArgs args) {
       Item item;
-      var player = Utils.GetPlayer(args.Player.Index);
+      var player = RPlayers[args.Player.Index];
       int page = 1;
 
       if (args.Parameters.Count == 0) {
