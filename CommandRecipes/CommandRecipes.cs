@@ -55,7 +55,6 @@ namespace CommandRecipes {
     public override void Initialize() {
       ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInitialize);
       ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
-      ServerApi.Hooks.NetGetData.Register(this, OnGetData);
       PlayerHooks.PlayerPostLogin += OnPostLogin;
     }
 
@@ -63,7 +62,6 @@ namespace CommandRecipes {
       if (disposing) {
         ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInitialize);
         ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
-        ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
         PlayerHooks.PlayerPostLogin -= OnPostLogin;
         Log.Dispose();
       }
@@ -95,101 +93,6 @@ namespace CommandRecipes {
 
       RPlayers.RemoveAll(pl => pl.Index == args.Who);
     }
-
-    void OnGetData(GetDataEventArgs args) {
-      if (config.CraftFromInventory)
-        return;
-
-      if (args.MsgID == PacketTypes.ItemDrop) {
-        if (args.Handled)
-          return;
-
-        using (var data = new MemoryStream(args.Msg.readBuffer, args.Index, args.Length)) {
-          Int16 id = data.ReadInt16();
-          float posx = data.ReadSingle();
-          float posy = data.ReadSingle();
-          float velx = data.ReadSingle();
-          float vely = data.ReadSingle();
-          Int16 stacks = data.ReadInt16();
-          int prefix = data.ReadByte();
-          bool nodelay = data.ReadBoolean();
-          Int16 netid = data.ReadInt16();
-
-          Item item = new Item();
-          item.SetDefaults(netid);
-
-          if (id != 400)
-            return;
-
-          foreach (RecPlayer player in RPlayers) {
-            if (player.activeRecipe != null && player.Index == args.Msg.whoAmI) {
-              List<Ingredient> fulfilledIngredient = new List<Ingredient>();
-              foreach (Ingredient ing in player.activeIngredients) {
-                //ing.prefix == -1 means accepts any prefix
-                if (ing.name == item.name && (ing.prefix == -1 || ing.prefix == prefix)) {
-                  ing.stack -= stacks;
-
-                  if (ing.stack > 0) {
-                    player.TSPlayer.SendInfoMessage("Drop another {0}.", Utils.FormatItem((Item)ing));
-                    player.droppedItems.Add(new RecItem(item.name, stacks, prefix));
-                    args.Handled = true;
-                    return;
-                  }
-                  else if (ing.stack < 0) {
-                    player.TSPlayer.SendInfoMessage("Giving back {0}.", Utils.FormatItem((Item)ing));
-                    player.TSPlayer.GiveItem(item.type, item.name, item.width, item.height, Math.Abs(ing.stack), prefix);
-                    player.droppedItems.Add(new RecItem(item.name, stacks + ing.stack, prefix));
-                    foreach (Ingredient ingr in player.activeIngredients)
-                      if ((ingr.group == 0 && ingr.name == ing.name) || (ingr.group != 0 && ingr.group == ing.group))
-                        fulfilledIngredient.Add(ingr);
-                    args.Handled = true;
-                  }
-                  else {
-                    player.TSPlayer.SendInfoMessage("Dropped {0}.", Utils.FormatItem((Item)ing, stacks));
-                    player.droppedItems.Add(new RecItem(item.name, stacks, prefix));
-                    foreach (Ingredient ingr in player.activeIngredients)
-                      if ((ingr.group == 0 && ingr.name == ing.name) || (ingr.group != 0 && ingr.group == ing.group))
-                        fulfilledIngredient.Add(ingr);
-                    args.Handled = true;
-                  }
-                }
-              }
-
-              if (fulfilledIngredient.Count < 1)
-                return;
-
-              player.activeIngredients.RemoveAll(i => fulfilledIngredient.Contains(i));
-
-              foreach (Ingredient ing in player.activeRecipe.ingredients) {
-                if (ing.name == item.name && ing.prefix == -1)
-                  ing.prefix = prefix;
-              }
-
-              if (player.activeIngredients.Count < 1) {
-                List<Product> lDetPros = Utils.DetermineProducts(player.activeRecipe.products);
-                foreach (Product pro in lDetPros) {
-                  Item product = new Item();
-                  product.SetDefaults(pro.name);
-                  //itm.Prefix(-1) means at least a 25% chance to hit prefix = 0. if < -1, even chances. 
-                  product.Prefix(pro.prefix);
-                  pro.prefix = product.prefix;
-                  player.TSPlayer.GiveItem(product.type, product.name, product.width, product.height, pro.stack, product.prefix);
-                  player.TSPlayer.SendSuccessMessage("Received {0}.", Utils.FormatItem((Item)pro));
-                }
-                List<RecItem> prods = new List<RecItem>();
-                lDetPros.ForEach(i => prods.Add(new RecItem(i.name, i.stack, i.prefix)));
-                Log.Recipe(new LogRecipe(player.activeRecipe.name, player.droppedItems, prods), player.name);
-                // Commands :o (NullReferenceException-free :l)
-                player.activeRecipe.Clone().ExecuteCommands(player.TSPlayer);
-                player.activeRecipe = null;
-                player.droppedItems.Clear();
-                player.TSPlayer.SendInfoMessage("Finished crafting.");
-              }
-            }
-          }
-        }
-      }
-    }
     #endregion
 
     #region Commands
@@ -197,8 +100,7 @@ namespace CommandRecipes {
       Item item;
       var player = Utils.GetPlayer(args.Player.Index);
       if (args.Parameters.Count == 0) {
-        args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /craft <recipe/-quit/-list/-allcats/-cat{0}>",
-          (config.CraftFromInventory) ? "/-confirm" : "");
+        args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /craft <recipe/-list/-allcats/-cat/-confirm>");
         return;
       }
 
@@ -268,22 +170,7 @@ namespace CommandRecipes {
             args.Player.SendInfoMessage("{0}", String.Join(", ", catrec));
           }
           return;
-        case "-quit":
-          args.Player.SendInfoMessage("Returning dropped items...");
-          foreach (RecItem itm in player.droppedItems) {
-            item = new Item();
-            item.SetDefaults(itm.name);
-            args.Player.GiveItem(item.type, itm.name, item.width, item.height, itm.stack, itm.prefix);
-            player.TSPlayer.SendInfoMessage("Returned {0}.", Utils.FormatItem((Item)itm));
-          }
-          player.activeRecipe = null;
-          player.droppedItems.Clear();
-          player.TSPlayer.SendInfoMessage("Successfully quit crafting.");
-          return;
         case "-confirm":
-          if (!config.CraftFromInventory) {
-            args.Player.SendErrorMessage("Crafting from inventory is disabled!");
-          }
           int count = 0;
           Dictionary<int, bool> finishedGroup = new Dictionary<int, bool>();
           Dictionary<int, int> slots = new Dictionary<int, int>();
@@ -393,10 +280,9 @@ namespace CommandRecipes {
           }
           if (player.activeRecipe != null) {
             List<string> inglist = Utils.ListIngredients(player.activeRecipe.ingredients);
-            args.Player.SendInfoMessage("The {0} recipe requires {1} to craft. {2}",
+            args.Player.SendInfoMessage("The {0} recipe requires {1} to craft. Type \"/craft -confirm\" to craft.",
               player.activeRecipe.name,
-              (inglist.Count > 1) ? String.Join(", ", inglist.ToArray(), 0, inglist.Count - 1) + ", and " + inglist.LastOrDefault() : inglist[0],
-              (config.CraftFromInventory) ? "Type \"/craft -confirm\" to craft." : "Please drop all required items.");
+              (inglist.Count > 1) ? String.Join(", ", inglist.ToArray(), 0, inglist.Count - 1) + ", and " + inglist.LastOrDefault() : inglist[0]);
           }
           break;
       }

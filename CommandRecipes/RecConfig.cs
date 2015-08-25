@@ -198,7 +198,6 @@ namespace CommandRecipes {
   }
 
   public class RecConfig {
-    public bool CraftFromInventory = false;
     public List<Recipe> Recipes;
 
     public RecConfig() {
@@ -231,8 +230,7 @@ namespace CommandRecipes {
 
     public static RecConfig Read() {
       if (!File.Exists(CommandRecipes.configPath)) {
-        Write();
-        return new RecConfig();
+        return Write();
       }
 
       try {
@@ -245,8 +243,10 @@ namespace CommandRecipes {
       }
     }
 
-    public static void Write() {
-      File.WriteAllText(CommandRecipes.configPath, JsonConvert.SerializeObject(this, Formatting.Indented));
+    public static RecConfig Write() {
+      RecConfig res = new RecConfig();
+      File.WriteAllText(CommandRecipes.configPath, JsonConvert.SerializeObject(res, Formatting.Indented));
+      return res;
     }
   }
 }
