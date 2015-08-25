@@ -74,7 +74,7 @@ namespace CommandRecipes {
       Commands.ChatCommands.Add(new Command("cmdrec.player.craft", Craft, "craft") {
         HelpText = "Allows the player to craft items via command from config-defined recipes."
       });
-      Commands.ChatCommands.Add(new Command("cmdrec.admin.reload", RecReload, "recrld") {
+      Commands.ChatCommands.Add(new Command("cmdrec.admin.reload", RecReload, "craftreloadcfg","craftreload","recrld") {
         HelpText = "Reloads AllRecipes.json"
       });
 
@@ -100,7 +100,7 @@ namespace CommandRecipes {
       Item item;
       var player = Utils.GetPlayer(args.Player.Index);
       if (args.Parameters.Count == 0) {
-        args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /craft <recipe/-list/-allcats/-cat/-confirm>");
+        args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /craft <recipe/-quit/-list/-allcats/-cat/-confirm>");
         return;
       }
 
@@ -169,6 +169,18 @@ namespace CommandRecipes {
             args.Player.SendInfoMessage("Recipes in this category:");
             args.Player.SendInfoMessage("{0}", String.Join(", ", catrec));
           }
+          return;
+        case "-quit":
+          args.Player.SendInfoMessage("Returning dropped items...");
+          foreach (RecItem itm in player.droppedItems) {
+            item = new Item();
+            item.SetDefaults(itm.name);
+            args.Player.GiveItem(item.type, itm.name, item.width, item.height, itm.stack, itm.prefix);
+            player.TSPlayer.SendInfoMessage("Returned {0}.", Utils.FormatItem((Item)itm));
+          }
+          player.activeRecipe = null;
+          player.droppedItems.Clear();
+          player.TSPlayer.SendInfoMessage("Successfully quit crafting.");
           return;
         case "-confirm":
           int count = 0;

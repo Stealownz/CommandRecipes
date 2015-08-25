@@ -224,7 +224,7 @@ namespace CommandRecipes {
             new Product("Iron Broadsword", 1, 41, 0, 100),
             new Product("Wooden Hammer", 1, 39, 0, 100) },
         new List<string> { "Example", "Example2" },
-        new List<string> { "cmdrec.craft.example", "craft" },
+        new List<string> { "cmdrec.craft.example" },
         new List<string> { "" }));
     }
 
