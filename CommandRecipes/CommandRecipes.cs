@@ -93,6 +93,11 @@ namespace CommandRecipes {
 
     #region Commands
     void Craft(CommandArgs args) {
+      if (!args.Player.IsLoggedIn) {
+        args.Player.SendErrorMessage("You must be logged in to use this command!");
+        return;
+      }
+
       Item item;
       var player = RPlayers[args.Player.Index];
       int page = 1;
@@ -279,13 +284,8 @@ namespace CommandRecipes {
 
         #region default
         default:
-          if (!args.Player.IsLoggedIn) {
-            args.Player.SendErrorMessage("You must be logged in to use this command!");
-            return;
-          }
-
           if (player.activeRecipe != null) {
-            args.Player.SendErrorMessage("You must finish crafting or quit your current recipe!");
+            args.Player.SendErrorMessage("You must finish crafting or \"/craft -quit\" your current recipe!");
             return;
           }
 
