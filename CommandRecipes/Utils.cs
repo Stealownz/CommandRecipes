@@ -27,7 +27,7 @@ namespace CommandRecipes {
           if (groups[i] == item.group)
             lGrIng.Add(FormatItem((Item)item));
         }
-        lActIngs.Add(String.Join(" or ", lGrIng));
+        lActIngs.Add("<" + String.Join(" OR ", lGrIng) + ">");
       }
       return lActIngs;
     }
@@ -84,7 +84,7 @@ namespace CommandRecipes {
         return;
 
       List<string> inglist = Utils.ListIngredients(player.activeRecipe.ingredients);
-      tsplr.SendInfoMessage("The {0} recipe requires: ", player.activeRecipe.name);
+      tsplr.SendInfoMessage("The {0} recipe requires: ", string.Concat("[i:", player.activeRecipe.name, "]"));
       tsplr.SendMessage(string.Format("Ingredients: {0}", String.Join(", ", inglist.ToArray(), 0, inglist.Count)), Color.LightGray);
       if (SEconomyPlugin.Instance != null) {
         string money = SEconomyPlugin.Instance.Configuration.MoneyConfiguration.MoneyName;
@@ -153,10 +153,11 @@ namespace CommandRecipes {
     public static string FormatItem(Item item, int stacks = 0) {
       string str = TShock.Utils.GetPrefixById(item.prefix);
       string prefix = str == "" ? "" : "[" + str + "] ";
-      return String.Format("{0} {1}{2}",
-        (stacks == 0) ? Math.Abs(item.stack) : stacks,
-        prefix,
-        item.name);
+      if (prefix == "") {
+        return string.Format("[i/s{0}:{1}]", (stacks == 0) ? Math.Abs(item.stack) : stacks, item.name);
+      } else {
+        return string.Format("[i/p{0}:{1}]", prefix, item.name);
+      }
     }
   }
 }
