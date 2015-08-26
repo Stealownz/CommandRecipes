@@ -151,13 +151,17 @@ namespace CommandRecipes {
     }
     
     public static string FormatItem(Item item, int stacks = 0) {
-      string str = TShock.Utils.GetPrefixById(item.prefix);
-      string prefix = str == "" ? "" : "[" + str + "] ";
-      if (prefix == "") {
-        return string.Format("[i/s{0}:{1}]", (stacks == 0) ? Math.Abs(item.stack) : stacks, item.name);
-      } else {
-        return string.Format("[i/p{0}:{1}]", prefix, item.name);
-      }
+      string prefix = TShock.Utils.GetPrefixById(item.prefix);
+      if (prefix != "")
+        return string.Format("[{0}] [i/p{1}:{2}]", prefix, item.prefix, item.netID);
+
+      if (stacks != 0)
+        return string.Format("[i/s{0}:{1}]", stacks, item.netID);
+      else if (item.stack != 0)
+        return string.Format("[i/s{0}:{1}]", item.stack, item.netID);
+      else
+        return string.Format("[i:{0}]", item.netID);
+
     }
   }
 }
