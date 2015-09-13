@@ -17,7 +17,7 @@ using Wolfje.Plugins.SEconomy;
 using Wolfje.Plugins.SEconomy.Journal;
 
 namespace CommandRecipes {
-  [ApiVersion(1, 21)]
+  [ApiVersion(1, 22)]
   public class CommandRecipes : TerrariaPlugin {
     public static RecPlayer[] RPlayers = new RecPlayer[Main.maxPlayers];
     public static RecConfig config { get; set; }
